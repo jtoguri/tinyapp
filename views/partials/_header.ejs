@@ -16,10 +16,14 @@
           <input type="submit" class="btn" value="Logout" style="border: solid 1px black; margin-left: 0.5em">
         </form>
       <% } else { %>
-        <form method="POST" action="/login" style="display: flex; justify-content: flex-end">
-          <input type="text" name="username" placeholder="Username" style="border: none; border-radius: 5px;">
-          <button type="submit" class="btn" style="border: solid 1px black; margin-left: 0.5em">Login</button>
+        <div style="display: flex; justify-content: flex-end">
+        <form method="GET" action="/register">
+          <input type="submit" class="btn" value="Register" style="border: solid 1px black; margin-left: 0.5em">
         </form>
+        <form method="GET" action="/login">
+          <input type="submit" class="btn" value="Login" style="border: solid 1px black; margin-left: 0.5em">
+        </form>
+        </div>
       <% } %>
   </nav>
 </header>
