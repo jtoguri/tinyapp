@@ -11,17 +11,19 @@
 <body>
   <%- include('partials/_header') %>
 
-  <h1>Login</h1>
+  <main style="margin: 1em;">
+    <h1>Login</h1>
 
-  <form method="post" action="/login">
-    <label for="email">Email</label>
-    <input type="email" name="email">
+    <form method="post" action="/login" style="display: flex; flex-direction: column">
+      <label for="email" style="font-weight: bold">Email address</label>
+      <input type="email" name="email" placeholder="Enter email" style="max-width: 25%">
 
-    <label for="password">Password</label>
-    <input type="password" name="password">
+      <label for="password" style="margin-top: 1em; font-weight: bold">Password</label>
+      <input type="password" name="password" placeholder="Password" style="max-width: 25%">
 
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+      <button type="submit" class="btn btn-primary" style="max-width: fit-content; margin-top: 1em">Login</button>
+    </form>
+  </main>
 
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

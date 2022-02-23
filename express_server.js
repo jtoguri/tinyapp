@@ -46,11 +46,11 @@ function createNewId(database) {
   return id;
 }
 
-function validateEmail(email, database) {
+function checkEmailExists(email, database) {
   for (const user in database) {
-    if (database[user].email === email) return false;
+    if (database[user].email === email) return database[user].id;
   }
-  return true;
+  return false;
 }
 
 app.post("/urls", (req, res) => {
@@ -114,12 +114,14 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  const userId = checkEmailExists(req.body.email, users);
+  if (!userId || users[userId].password !== req.body.password) res.sendStatus(403);
+  res.cookie('user_id', userId);
   res.redirect('/urls');
 });
 
@@ -132,7 +134,7 @@ app.post("/register", (req, res) => {
   
   // Check if email or password is empty, or if email already exists
   // *NOTE potential refactoring this at later point, specifically test out res.status options compared to res.sendStatus
-  if (req.body.email.length === 0 || req.body.password.length === 0 || !validateEmail(req.body.email, users)) {
+  if (req.body.email.length === 0 || req.body.password.length === 0 || checkEmailExists(req.body.email, users)) {
     res.sendStatus(400);
   }
   
