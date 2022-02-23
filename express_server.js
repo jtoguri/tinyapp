@@ -54,24 +54,37 @@ function checkEmailExists(email, database) {
   return false;
 }
 
+function urlsForUser(id) {
+  const urls = {};
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      urls[url] = urlDatabase[url].longURL;
+    }
+  }
+  return urls;
+}
+
 app.post("/urls", (req, res) => {
 
   const shortURL = createNewId(urlDatabase);
   
   // Add the short and long url key value pair to the database
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies['user_id'] };
   console.log(urlDatabase);
 
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  const urls = urlsForUser(req.cookies['user_id']);
+  if (urls[req.params.shortURL]) delete urlDatabase[req.params.shortURL];
+  console.log(urlDatabase);
   res.redirect("/urls");
 })
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  const urls = urlsForUser(req.cookies['user_id']);
+  if (urls[req.params.shortURL]) urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 })
 
@@ -87,10 +100,10 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls", (req, res) => {
-    const templateVars = {
+app.get("/urls", (req, res) => {  
+  const templateVars = {
       user: users[req.cookies['user_id']],
-      urls: urlDatabase 
+      urls: urlsForUser(req.cookies['user_id']) 
     };
   res.render("urls_index", templateVars);
 });
@@ -102,10 +115,12 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  
   const templateVars = { 
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user: users[req.cookies['user_id']]
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: users[req.cookies['user_id']],
+    urls: urlsForUser(req.cookies['user_id'])
   };
   res.render("urls_show", templateVars);
 });
