@@ -34,14 +34,28 @@ function generateRandomString() {
     result += characters.charAt(Math.floor(Math.random() * characters.length))
   }
   return result;
+};
+
+// Generate a random string until one is created that does not already exist in the provided database
+function createNewId(database) {
+  let id = '';
+  do {
+    id = generateRandomString();
+  } while (database[id])
+
+  return id;
+}
+
+function validateEmail(email, database) {
+  for (const user in database) {
+    if (database[user].email === email) return false;
+  }
+  return true;
 }
 
 app.post("/urls", (req, res) => {
-  // Generate a random string until one is created that does not already exist in the database
-  let shortURL = '';
-  do {
-    shortURL = generateRandomString();
-  } while (urlDatabase[shortURL])
+
+  const shortURL = createNewId(urlDatabase);
   
   // Add the short and long url key value pair to the database
   urlDatabase[shortURL] = req.body.longURL;
@@ -115,10 +129,14 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  let userId = '';
-  do {
-    userId = generateRandomString();
-  } while (users[userId])
+  
+  // Check if email or password is empty, or if email already exists
+  // *NOTE potential refactoring this at later point, specifically test out res.status options compared to res.sendStatus
+  if (req.body.email.length === 0 || req.body.password.length === 0 || !validateEmail(req.body.email, users)) {
+    res.sendStatus(400);
+  }
+  
+  const userId = createNewId(users);
 
   users[userId] = {
     id: userId,
