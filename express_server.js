@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -14,16 +15,23 @@ const urlDatabase = {
   "b6UTxQ": { longURL: "https://www.tsn.ca", userID: "userRandomID" }
 };
 
+const SALTROUNDS = 10;
+const password1 = "purple-monkey-dinosaur";
+const hashedPassword1 = bcrypt.hashSync(password1, SALTROUNDS);
+
+const password2 = "dishwasher-funk";
+const hashedPassword2 = bcrypt.hashSync(password2, SALTROUNDS);
+
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: hashedPassword1
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: hashedPassword2
   }
 }
 
@@ -137,9 +145,10 @@ app.post("/logout", (req, res) => {
 
 app.post("/login", (req, res) => {
   const userId = checkEmailExists(req.body.email, users);
-  if (!userId || users[userId].password !== req.body.password) res.sendStatus(403);
+  if (!userId || !bcrypt.compareSync(req.body.password, users[userId].password)) res.sendStatus(403);
   res.cookie('user_id', userId);
   res.redirect('/urls');
+  console.log(users);
 });
 
 app.get("/register", (req, res) => {
@@ -160,7 +169,7 @@ app.post("/register", (req, res) => {
   users[userId] = {
     id: userId,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, SALTROUNDS)
   };
   
   res.cookie('user_id', userId);
