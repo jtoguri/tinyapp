@@ -2,11 +2,18 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+
+// Create a new express server
 const app = express();
 const PORT = 8080; // default port 8080
 
+// Set EJS as the template engine for the app
 app.set("view engine", "ejs");
+
+// Use the body-parser library to parse incoming request bodies in a middleware before the handlers
 app.use(bodyParser.urlencoded({extended: true}));
+
+
 app.use(cookieSession({
   name: 'session',
   keys: ['key1']
@@ -75,6 +82,50 @@ function urlsForUser(id) {
   return urls;
 }
 
+// This should probably be changed to a redirect to /urls
+
+app.get("/", (req, res) => {
+  res.send("Hello!");
+});
+
+// This should also probably be modified
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+// Should login checks be added in here? Or should this just be removed, no other mention of it after first seen
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
+// Example showing that a response can contain html code to be rendered in the browser, not sure if this should be left in here either
+
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+// Route handler to display the current user's urls
+app.get("/urls", (req, res) => {  
+  const templateVars = {
+      user: users[req.session.user_id],
+      urls: urlsForUser(req.session.user_id) 
+    };
+  res.render("urls_index", templateVars);
+});
+
+// Route handler to display the page for users to add a new url
+app.get("/urls/new", (req, res) => {
+
+  // Only users that are logged in can input a new url
+  // If someone that is not logged in tries to access the page they are redirected to the login page
+  if (!req.session.user_id) res.redirect("/login");
+
+  const templateVars = { user: users[req.user_id] };
+  res.render("urls_new", templateVars);
+});
+
 app.post("/urls", (req, res) => {
 
   const shortURL = createNewId(urlDatabase);
@@ -98,32 +149,6 @@ app.post("/urls/:shortURL", (req, res) => {
   if (urls[req.params.shortURL]) urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 })
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/urls", (req, res) => {  
-  const templateVars = {
-      user: users[req.session.user_id],
-      urls: urlsForUser(req.session.user_id) 
-    };
-  res.render("urls_index", templateVars);
-});
-
-app.get("/urls/new", (req, res) => {
-  if (!req.session.user_id) res.redirect("/login");
-  const templateVars = { user: users[req.user_id] };
-  res.render("urls_new", templateVars);
-});
 
 app.get("/urls/:shortURL", (req, res) => {
   
@@ -183,7 +208,3 @@ app.get("/login", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
   res.render("login_form", templateVars)
 })
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
