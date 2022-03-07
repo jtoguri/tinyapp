@@ -14,15 +14,20 @@
   <main style="margin: 1em;">
       <h1>Create Account</h1>
 
-      <form method="post" action="/register" style="display: flex; flex-direction: column">
-        
-        <label for="email" style="font-weight: bold">Email address</label>
-        <input type="email" name="email" placeholder="Enter email" style="max-width: 25%">
-
-        <label for="password" style="margin-top: 1em; font-weight: bold">Password</label>
-        <input type="password" name="password" placeholder="Password" style="max-width: 25%">
-
-        <button type="submit" class="btn btn-primary" style="max-width: fit-content; margin-top: 1em">Register</button>
+      <form method="post" action="/register">
+        <div class="col-5 pl-0">
+          <div class="mb-3">
+            <label for="email" class="form-label h6">Email address</label>
+            <input type="email" class="form-control" name="email" placeholder="Enter email">
+          </div>
+    
+          <div class="mb-3">
+            <label for="password" class="form-label h6">Password</label>
+            <input type="password" class="form-control" name="password" placeholder="Password">
+          </div>
+    
+          <button type="submit" class="btn btn-primary">Register</button>
+          </div>
       </form>
   </main>
   <!-- Bootstrap JS -->
