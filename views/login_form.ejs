@@ -14,14 +14,18 @@
   <main style="margin: 1em;">
     <h1>Login</h1>
 
-    <form method="post" action="/login" style="display: flex; flex-direction: column">
-      <label for="email" style="font-weight: bold">Email address</label>
-      <input type="email" name="email" placeholder="Enter email" style="max-width: 25%">
+    <form method="post" action="/login">
+      <div class="mb-3">
+        <label for="email" class="form-label h6">Email address</label>
+        <input type="email" class="form-control" name="email" placeholder="Enter email" style="max-width: 45%">
+      </div>
 
-      <label for="password" style="margin-top: 1em; font-weight: bold">Password</label>
-      <input type="password" name="password" placeholder="Password" style="max-width: 25%">
+      <div class="mb-3">
+        <label for="password" class="form-label h6">Password</label>
+        <input type="password" class="form-control" name="password" placeholder="Password" style="max-width: 45%">
+      </div>
 
-      <button type="submit" class="btn btn-primary" style="max-width: fit-content; margin-top: 1em">Login</button>
+      <button type="submit" class="btn btn-primary">Login</button>
     </form>
   </main>
 
