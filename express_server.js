@@ -1,11 +1,13 @@
+// Import the express framework
 const express = require("express");
 
+// Import all of the middleware
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
-const morgan = require('morgan');
 
-const { getUserByEmail } = require("./helpers.js");
+// Import the helper functions
+const { getUserByEmail, generateRandomString, createNewId, urlsForUser } = require("./helpers.js");
 
 // Create a new express server
 const app = express();
@@ -16,8 +18,6 @@ app.set("view engine", "ejs");
 
 // Use the body-parser library to parse incoming request bodies in a middleware before the handlers
 app.use(bodyParser.urlencoded({extended: true}));
-
-app.use(morgan('dev'));
 
 // Use the cookie session middleware to encrypt cookies, note that in practice a more robust secret key should be used (longer and more random)
 app.use(cookieSession({
@@ -32,6 +32,7 @@ const urlDatabase = {
   "b6UTxQ": { longURL: "https://www.tsn.ca", userID: "userRandomID" }
 };
 
+// Hashing of the example users' passwords
 const SALTROUNDS = 10;
 const password1 = "purple-monkey-dinosaur";
 const hashedPassword1 = bcrypt.hashSync(password1, SALTROUNDS);
@@ -53,42 +54,6 @@ const users = {
   }
 }
 
-// Generate a random string of 6 characters which can include lower/upper case letters and numbers 0-9
-function generateRandomString() {
-  let result = '';
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const length = 6;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length))
-  }
-  return result;
-};
-
-// Generate a random string until one is created that does not already exist in the provided database
-function createNewId(database) {
-  let id = '';
-  do {
-    id = generateRandomString();
-  } while (database[id])
-
-  return id;
-}
-
-// Function that returns the urls that belong to a user, given the user id
-function urlsForUser(id) {
-  const urls = {};
-  
-  // Loop over the url database and compare each corresponding user id to the given user id
-  // If the user ids match, the url object gets added to the list of urls
-  for (const url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      urls[url] = urlDatabase[url].longURL;
-    }
-  }
-
-  return urls;
-}
-
 app.listen(PORT, () => {
   // console.log(`Example app listening on port ${PORT}!`);
 });
@@ -105,7 +70,7 @@ app.get("/urls", (req, res) => {
   // If the user is not logged the user object will be undefined and the list of urls will be emptyx
   const templateVars = {
       user: users[req.session.user_id],
-      urls: urlsForUser(req.session.user_id) 
+      urls: urlsForUser(req.session.user_id, urlDatabase) 
     };
   res.render("urls_index", templateVars);
 });
@@ -157,7 +122,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
-    urls: urlsForUser(req.session.user_id)
+    urls: urlsForUser(req.session.user_id, urlDatabase)
   };
   res.render("urls_show", templateVars);
 });
@@ -166,7 +131,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
 
   // Access the urls that belong to the current user
-  const urls = urlsForUser(req.session.user_id);
+  const urls = urlsForUser(req.session.user_id), urlDatabase;
 
   // If the url to be updated belongs to the current user then update it
   if (urls[req.params.shortURL]) urlDatabase[req.params.shortURL].longURL = req.body.longURL;
@@ -179,7 +144,7 @@ app.post("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   
   // Access the urls that belong to the current user, if the user is not logged in this will be empty
-  const urls = urlsForUser(req.session.user_id);
+  const urls = urlsForUser(req.session.user_id, urlDatabase);
 
   // Delete the url specified only if it belongs to the current user, it the url does not belong to thc current user no changes will be made
   if (urls[req.params.shortURL]) delete urlDatabase[req.params.shortURL];

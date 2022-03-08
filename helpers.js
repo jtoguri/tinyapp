@@ -12,6 +12,49 @@ function getUserByEmail(email, database) {
   return undefined;
 }
 
+// Generate a random string of 6 characters which can include lower/upper case letters and numbers 0-9
+function generateRandomString() {
+  let result = '';
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const length = 6;
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+  
+  return result;
+};
+
+// Generate a random string until one is created that does not already exist in the provided database
+function createNewId(database) {
+  let id = '';
+  
+  do {
+    id = generateRandomString();
+  } while (database[id])
+
+  return id;
+}
+
+// Function that returns the urls that belong to a user, given the user id and a database of urls
+function urlsForUser(id, database) {
+  const urls = {};
+  
+  // Loop over the url database and compare each corresponding user id to the given user id
+  // If the user ids match, the url object gets added to the list of urls
+  for (const url in database) {
+    if (database[url].userID === id) {
+      urls[url] = database[url].longURL;
+    }
+  }
+
+  return urls;
+}
+
+
 module.exports = {
-  getUserByEmail
+  getUserByEmail,
+  generateRandomString,
+  createNewId,
+  urlsForUser
 }
