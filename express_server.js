@@ -1,8 +1,11 @@
 const express = require("express");
+
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const morgan = require('morgan');
+
+const { getUserByEmail } = require("./helpers");
 
 // Create a new express server
 const app = express();
@@ -16,12 +19,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(morgan('dev'));
 
-// Use the 
+// Use the cookie session middleware to encrypt cookies, note that in practice a more robust secret key should be used (longer and more random)
 app.use(cookieSession({
   name: 'session',
   keys: ['key1']
 }));
 
+// An example database containing existitng urls so there is pre-existing data on server start
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
   "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID"},
@@ -70,18 +74,6 @@ function createNewId(database) {
   return id;
 }
 
-// Function that takes in an email and a database of users then retrives the user id of the user that email belongs to
-function getUserByEmail(email, database) {
-  
-  // If a user in the database has the same email as the one provided that user's id is returned
-  for (const user in database) {
-    if (database[user].email === email) return database[user].id;
-  }
-
-  // If no user exists with the email, the function returns null
-  return null;
-}
-
 // Function that returns the urls that belong to a user, given the user id
 function urlsForUser(id) {
   const urls = {};
@@ -110,6 +102,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
 
   // Include the object containing the current user's info and the list of urls that belong to them as template variables
+  // If the user is not logged the user object will be undefined and the list of urls will be emptyx
   const templateVars = {
       user: users[req.session.user_id],
       urls: urlsForUser(req.session.user_id) 
@@ -185,25 +178,41 @@ app.post("/urls/:shortURL", (req, res) => {
 // Route handler to delete a url from the url database
 app.post("/urls/:shortURL/delete", (req, res) => {
   
-  // Access the urls that belong to the current user
+  // Access the urls that belong to the current user, if the user is not logged in this will be empty
   const urls = urlsForUser(req.session.user_id);
 
-  // Delete the url specified only if it belongs to the current user
+  // Delete the url specified only if it belongs to the current user, it the url does not belong to thc current user no changes will be made
   if (urls[req.params.shortURL]) delete urlDatabase[req.params.shortURL];
-  console.log(urlDatabase);
+  
+  // Redirect to the home page so the user may see any changes
   res.redirect("/urls");
 })
 
-// ****** NOTE when using curl to login (from cookies in express) with -d "email=" -d "password=" and -L it ends up in an infinite loop redirecting to /urls, why is this?
+// Route handler to render the login page
+app.get("/login", (req, res) => {
+
+  // If the user is already logged in, redirect them to the home page
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  }
+  
+  // Set the user to be null and render the login form
+  const templateVars = { user: null };
+  res.render("login_form", templateVars);
+})
+
 // Route handler to allow users to login to the app
 app.post("/login", (req, res) => {
+
   // Confirm the user has inputed an existing email
   const userId = getUserByEmail(req.body.email, users);
+
   // If the user did not input a valid email or password then a 'forbidden' HTTP response status code is sent, indicating the user is un-authorized
   if (!userId || !bcrypt.compareSync(req.body.password, users[userId].password)) res.sendStatus(403);
+
   // If the user is valid, set the user_id cookie to be the user id corresponding to the provided email
   req.session.user_id = userId;
-  res.redirect(301, '/urls');
+  res.redirect('/urls');
 });
 
 // Allow users to logout by clearing the session cookies
@@ -213,14 +222,14 @@ app.post("/logout", (req, res) => {
 });
 
 // Render the registration form for new users
-// ***** Should there be a conditional here so that users who are already logged in cannot register new users?*****
 app.get("/register", (req, res) => {
-  // Include the object containing the current user's info as a template variable
-
+  
+  // If the user is already logged in, redirect them to the home page
   if (req.session.user_id) {
     res.redirect("/urls");
   }
   
+  // Set the user to be null and render the registration form
   const templateVars = { user: null };
   res.render("registration_form", templateVars)
 });
@@ -228,8 +237,7 @@ app.get("/register", (req, res) => {
 // Add new users to the user object
 app.post("/register", (req, res) => {
   
-  // Check if email/password are empty, or if the email already exists
-  // *NOTE potential refactoring this at later point, specifically test out res.status options compared to res.sendStatus
+  // If the email/password are empty, or if the email already exists a 400 status code will be sent, signalling a bad request due to client error
   if (req.body.email.length === 0 || req.body.password.length === 0 || getUserByEmail(req.body.email, users)) {
     res.sendStatus(400);
   }
@@ -248,16 +256,3 @@ app.post("/register", (req, res) => {
   req.session.user_id = userId;
   res.redirect('/urls');
 });
-
-// Route handler to render the login page
-app.get("/login", (req, res) => {
-  // Include the the object containing the current user's info as a template variable
-  // *** NOTE should therer be a pre check here to see if the user is already logged in and if so not allow them to access the login page?
-
-  if (req.session.user_id) {
-    res.redirect("/urls");
-  }
-  
-  const templateVars = { user: null };
-  res.render("login_form", templateVars);
-})
