@@ -131,7 +131,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
 
   // Access the urls that belong to the current user
-  const urls = urlsForUser(req.session.user_id), urlDatabase;
+  const urls = urlsForUser(req.session.user_id, urlDatabase);
 
   // If the url to be updated belongs to the current user then update it
   if (urls[req.params.shortURL]) urlDatabase[req.params.shortURL].longURL = req.body.longURL;
