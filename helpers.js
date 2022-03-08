@@ -8,8 +8,8 @@ function getUserByEmail(email, database) {
     if (database[user].email === email) return database[user].id;
   }
 
-  // If no user exists with the email, the function returns null
-  return null;
+  // If no user exists with the email, the function returns undefined
+  return undefined;
 }
 
 module.exports = {

@@ -5,7 +5,7 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const morgan = require('morgan');
 
-const { getUserByEmail } = require("./helpers");
+const { getUserByEmail } = require("./helpers.js");
 
 // Create a new express server
 const app = express();
