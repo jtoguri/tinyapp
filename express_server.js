@@ -173,7 +173,9 @@ app.post("/login", (req, res) => {
   const userId = getUserByEmail(req.body.email, users);
 
   // If the user did not input a valid email or password then a 'forbidden' HTTP response status code is sent, indicating the user is un-authorized
-  if (!userId || !bcrypt.compareSync(req.body.password, users[userId].password)) res.sendStatus(403);
+  if (!userId || !bcrypt.compareSync(req.body.password, users[userId].password)) {
+    return res.status(403).send("Invalid email or password.");
+  }
 
   // If the user is valid, set the user_id cookie to be the user id corresponding to the provided email
   req.session.user_id = userId;
@@ -203,8 +205,11 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   
   // If the email/password are empty, or if the email already exists a 400 status code will be sent, signalling a bad request due to client error
-  if (req.body.email.length === 0 || req.body.password.length === 0 || getUserByEmail(req.body.email, users)) {
-    res.sendStatus(400);
+  if (req.body.email.length === 0 || req.body.password.length === 0) {
+    return res.status(400).send("Invalid email or password.");
+  }
+  if (getUserByEmail(req.body.email, users)) {
+    return res.status(400).send("A account with this email already exists.");
   }
   
   // Generate a new user id
