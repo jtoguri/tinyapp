@@ -83,6 +83,12 @@ app.get("/urls", (req, res) => {
 // Route handler to create a new url and add it to the url datatbase
 app.post("/urls", (req, res) => {
 
+  // If the user is not logged in they can not add a new url, render the error page
+  if(!req.session.user_id) {
+    const message = "Please login to add a new url."
+    const templateVars = { user: null, message: message};
+    return res.status(403).render("error_page", templateVars);
+  }
   // Create a unique short url
   const shortURL = createNewId(urlDatabase);
   
@@ -98,7 +104,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
 
   // If the user is not logged in they are redirected to the login page
-  if (!req.session.user_id) res.redirect("/login");
+  if (!req.session.user_id) return res.redirect("/login");
 
   // If the user is logged in, include the object containing the current user's info as a template variable
   const templateVars = { user: users[req.session.user_id] };
@@ -109,7 +115,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
 
   // If the specified short url does not exist, the user is redirected to the home page
-  if (!urlDatabase[req.params.shortURL]) res.redirect("/urls");
+  if (!urlDatabase[req.params.shortURL]) return res.redirect("/urls");
 
   // If the shor url exists the user is redirected to the long url
   const longURL =  urlDatabase[req.params.shortURL].longURL;
@@ -120,7 +126,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
 
   // If the short url does not exist in the database, redirect the user to the home page
-  if (!urlDatabase[req.params.shortURL]) res.redirect("/urls");
+  if (!urlDatabase[req.params.shortURL]) return res.redirect("/urls");
   
   // Include the short/long urls, the object containing the user's info, and the list of the user's urls as template variables
   const templateVars = { 
@@ -139,9 +145,12 @@ app.put("/urls/:shortURL", (req, res) => {
   const urls = urlsForUser(req.session.user_id, urlDatabase);
 
   // If the url to be updated belongs to the current user then update it
-  if (urls[req.params.shortURL]) urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  if (urls[req.params.shortURL]) {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  }
 
   // Redirect the user to the home page to see their full url list
+  // If the user did not log in or if they tried to change a url that did not belong to them they would just be redirected to the home page
   res.redirect("/urls");
 })
 
@@ -151,7 +160,8 @@ app.delete("/urls/:shortURL", (req, res) => {
   // Access the urls that belong to the current user, if the user is not logged in this will be empty
   const urls = urlsForUser(req.session.user_id, urlDatabase);
 
-  // Delete the url specified only if it belongs to the current user, it the url does not belong to thc current user no changes will be made
+  // Delete the url specified only if it belongs to the current user
+  // It the url does not belong to the current user no changes will be made and they will just be redirected
   if (urls[req.params.shortURL]) delete urlDatabase[req.params.shortURL];
   
   // Redirect to the home page so the user may see any changes
@@ -162,9 +172,7 @@ app.delete("/urls/:shortURL", (req, res) => {
 app.get("/login", (req, res) => {
 
   // If the user is already logged in, redirect them to the home page
-  if (req.session.user_id) {
-    res.redirect("/urls");
-  }
+  if (req.session.user_id) return res.redirect("/urls");
   
   // Set the user to be null and render the login form
   const templateVars = { user: null };
@@ -177,9 +185,11 @@ app.post("/login", (req, res) => {
   // Confirm the user has inputed an existing email
   const userId = getUserByEmail(req.body.email, users);
 
-  // If the user did not input a valid email or password then a 'forbidden' HTTP response status code is sent, indicating the user is un-authorized
+  // If the user did not input a valid email or password render the error page
   if (!userId || !bcrypt.compareSync(req.body.password, users[userId].password)) {
-    return res.status(403).send("Invalid email or password.");
+    const message = "Invalid email or password."
+    const templateVars = { user: null, message: message}
+    return res.status(403).render("error_page", templateVars);
   }
 
   // If the user is valid, set the user_id cookie to be the user id corresponding to the provided email
@@ -198,7 +208,7 @@ app.get("/register", (req, res) => {
   
   // If the user is already logged in, redirect them to the home page
   if (req.session.user_id) {
-    res.redirect("/urls");
+    return res.redirect("/urls");
   }
   
   // Set the user to be null and render the registration form
@@ -211,10 +221,14 @@ app.post("/register", (req, res) => {
   
   // If the email/password are empty, or if the email already exists a 400 status code will be sent, signalling a bad request due to client error
   if (req.body.email.length === 0 || req.body.password.length === 0) {
-    return res.status(400).send("Invalid email or password.");
+    const message = "Must input valid email and password."
+    const templateVars = { user: null, message: message }
+    return res.status(400).render("error_page", templateVars);
   }
   if (getUserByEmail(req.body.email, users)) {
-    return res.status(400).send("A account with this email already exists.");
+    const message = "A account with this email already exists.";
+    const templateVars = { user: null, message: message };
+    return res.status(400).render("error_page", templateVars);
   }
   
   // Generate a new user id

@@ -6,29 +6,13 @@
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <title>Registration Form - TinyApp</title>
+  <title>Error Page - TinyApp</title>
 </head>
 <body>
   <%- include('partials/_header') %>
 
   <main style="margin: 1em;">
-    <h1>Create Account</h1>
-
-    <form method="post" action="/register">
-      <div class="col-5 pl-0">
-        <div class="mb-3">
-          <label for="email" class="form-label h6">Email address</label>
-          <input type="email" class="form-control" name="email" placeholder="Enter email">
-        </div>
-  
-        <div class="mb-3">
-          <label for="password" class="form-label h6">Password</label>
-          <input type="password" class="form-control" name="password" placeholder="Password">
-        </div>
-  
-        <button type="submit" class="btn btn-primary">Register</button>
-        </div>
-    </form>
+    <p><%= message %></p>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
