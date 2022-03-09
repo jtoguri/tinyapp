@@ -5,6 +5,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override');
+
 
 // Import the helper functions
 const { getUserByEmail, generateRandomString, createNewId, urlsForUser } = require("./helpers.js");
@@ -19,6 +21,9 @@ app.set("view engine", "ejs");
 // Use the body-parser library to parse incoming request bodies in a middleware before the handlers
 app.use(bodyParser.urlencoded({extended: true}));
 
+// Use the method-override library to override request methods
+app.use(methodOverride('_method'))
+
 // Use the cookie session middleware to encrypt cookies, note that in practice a more robust secret key should be used (longer and more random)
 app.use(cookieSession({
   name: 'session',
@@ -32,7 +37,7 @@ const urlDatabase = {
   "b6UTxQ": { longURL: "https://www.tsn.ca", userID: "userRandomID" }
 };
 
-// Hashing of the example users' passwords
+// Hashing of the example users' passwords using bcrypt
 const SALTROUNDS = 10;
 const password1 = "purple-monkey-dinosaur";
 const hashedPassword1 = bcrypt.hashSync(password1, SALTROUNDS);
@@ -128,7 +133,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 // Route handler to allow users to update a url from the app
-app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
 
   // Access the urls that belong to the current user
   const urls = urlsForUser(req.session.user_id, urlDatabase);
@@ -141,7 +146,7 @@ app.post("/urls/:shortURL", (req, res) => {
 })
 
 // Route handler to delete a url from the url database
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   
   // Access the urls that belong to the current user, if the user is not logged in this will be empty
   const urls = urlsForUser(req.session.user_id, urlDatabase);
